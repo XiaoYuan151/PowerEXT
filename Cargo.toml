@@ -1,0 +1,29 @@
+[package]
+name    = "PowerEXT"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "PowerEXT"
+path = "src/main.rs"
+
+[dependencies]
+notify       = { version = "6.1", features = ["macos_kqueue"] }
+rusqlite     = { version = "0.31", features = ["bundled"] }
+image        = { version = "0.25", features = ["gif", "webp"] }
+dirs         = "5.0"
+clap         = { version = "4.5", features = ["derive"] }
+tokio        = { version = "1.37", features = ["full"] }
+anyhow       = "1.0"
+uuid         = { version = "1.8", features = ["v4"] }
+tracing      = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender   = "0.2"
+mupdf = "0.6.0"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+notify-rust  = "4.11"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+winrt-notification = "0.5"
+windows-service    = "0.6"
