@@ -7,9 +7,10 @@ static MAGICK: &[u8] = include_bytes!("../assets/magick");
 
 /// Extract an embedded binary to `data_dir/bin/<name>` if not already there,
 /// then return its path. Falls back to PATH if the platform has no embedded copy.
-pub fn tool_path(name: &str, data_dir: &std::path::Path) -> Option<PathBuf> {
+pub fn tool_path(name: &str, _data_dir: &std::path::Path) -> Option<PathBuf> {
     #[cfg(target_os = "macos")]
     {
+        let data_dir = _data_dir;
         let (bytes, fname) = match name {
             "ffmpeg"  => (FFMPEG,  "ffmpeg"),
             "convert" | "magick" => (MAGICK, "magick"),

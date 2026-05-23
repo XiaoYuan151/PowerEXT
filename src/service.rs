@@ -1,12 +1,13 @@
-use anyhow::{bail, Result};
+use anyhow::Result;
 use std::env;
 
 pub fn install() -> Result<()> {
     let exe = env::current_exe()?;
-    let exe_str = exe.to_string_lossy();
 
     #[cfg(target_os = "macos")]
     {
+        use anyhow::bail;
+        let exe_str = exe.to_string_lossy();
         let plist_dir = dirs::home_dir().unwrap().join("Library/LaunchAgents");
         std::fs::create_dir_all(&plist_dir)?;
         let plist_path = plist_dir.join("com.PowerEXT.plist");
@@ -30,6 +31,8 @@ pub fn install() -> Result<()> {
 
     #[cfg(target_os = "linux")]
     {
+        use anyhow::bail;
+        let exe_str = exe.to_string_lossy();
         let svc_dir = dirs::home_dir().unwrap().join(".config/systemd/user");
         std::fs::create_dir_all(&svc_dir)?;
         std::fs::write(svc_dir.join("PowerEXT.service"), format!(

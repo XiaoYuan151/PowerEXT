@@ -62,28 +62,20 @@ pub async fn prompt_user(from: &Path, to: &Path, timeout: Duration) -> UserChoic
 
     #[cfg(target_os = "windows")]
     {
-        use std::sync::{Arc, Mutex};
-        use tokio::sync::oneshot;
-        use winrt_notification::Toast;
-
-        let (tx, rx) = oneshot::channel::<bool>();
-        let tx = Arc::new(Mutex::new(Some(tx)));
         let body = format!("{from_s} -> {to_s}");
-        let tx2 = tx.clone();
-        let _ = Toast::new(Toast::POWERSHELL_APP_ID)
-            .title("PowerEXT: convert file?")
-            .text1(&body)
-            .action("Convert", "accept")
-            .action("Skip", "reject")
-            .on_activated(move |action| {
-                if let Some(s) = tx2.lock().unwrap().take() {
-                    let _ = s.send(action.as_deref() == Some("accept"));
-                }
-            })
-            .show();
+        let secs = timeout.as_secs();
+        let result = tokio::task::spawn_blocking(move || {
+            let script = format!(
+                r#"Add-Type -AssemblyName PresentationFramework; $r = [System.Windows.MessageBox]::Show('Convert file?`n{body}', 'PowerEXT', 'YesNo', 'Question'); if ($r -eq 'Yes') {{ exit 0 }} else {{ exit 1 }}"#,
+            );
+            std::process::Command::new("powershell")
+                .args(["-NoProfile", "-Command", &script])
+                .output()
+        })
+        .await;
 
-        return match tokio::time::timeout(timeout, rx).await {
-            Ok(Ok(true)) => UserChoice::Accept,
+        return match result {
+            Ok(Ok(out)) if out.status.success() => UserChoice::Accept,
             _ => UserChoice::Reject,
         };
     }
