@@ -8,7 +8,16 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            artifact: PowerEXT
+          - os: ubuntu-latest
+            artifact: PowerEXT
+          - os: windows-latest
+            artifact: PowerEXT.exe
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -16,5 +25,5 @@ jobs:
       - run: cargo build --release
       - uses: actions/upload-artifact@v4
         with:
-          name: PowerEXT
-          path: target/release/PowerEXT
+          name: PowerEXT-${{ matrix.os }}
+          path: target/release/${{ matrix.artifact }}

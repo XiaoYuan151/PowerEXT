@@ -8,7 +8,7 @@ name = "PowerEXT"
 path = "src/main.rs"
 
 [dependencies]
-notify       = { version = "6.1", features = ["macos_kqueue"] }
+notify       = "6.1"
 rusqlite     = { version = "0.31", features = ["bundled"] }
 image        = { version = "0.25", features = ["gif", "webp"] }
 dirs         = "5.0"
@@ -19,7 +19,10 @@ uuid         = { version = "1.8", features = ["v4"] }
 tracing      = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-appender   = "0.2"
-mupdf = "0.6.0"
+mupdf        = "0.6.0"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+notify       = { version = "6.1", features = ["macos_kqueue"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 notify-rust  = "4.11"
