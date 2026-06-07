@@ -10,12 +10,12 @@ use std::time::Duration;
 use uuid::Uuid;
 
 pub async fn run(watch_path: PathBuf, db: Arc<Db>, data_dir: PathBuf) -> Result<()> {
-    tracing::info!(path = %watch_path.display(), "watching");
-    let mut prev = snapshot(&watch_path);
+    tracing::info!(path = %watch_path.display(), "watching recursively");
+    let mut prev = snapshot_recursive(&watch_path);
 
     loop {
         tokio::time::sleep(Duration::from_millis(500)).await;
-        let curr = snapshot(&watch_path);
+        let curr = snapshot_recursive(&watch_path);
 
         let removed: HashMap<&PathBuf, u64> = prev.iter()
             .filter(|(p, _)| !curr.contains_key(*p))
@@ -236,7 +236,7 @@ fn parse_sequence_stem(stem: &OsStr) -> Option<(String, u32)> {
     Some((s[..dot].to_string(), seq))
 }
 
-fn snapshot(root: &PathBuf) -> HashMap<PathBuf, u64> {
+fn snapshot_recursive(root: &PathBuf) -> HashMap<PathBuf, u64> {
     let mut map = HashMap::new();
     if let Ok(rd) = std::fs::read_dir(root) { collect_dir(rd, &mut map); }
     map
@@ -250,5 +250,28 @@ fn collect_dir(rd: std::fs::ReadDir, map: &mut HashMap<PathBuf, u64>) {
         } else if let Ok(meta) = entry.metadata() {
             map.insert(path, meta.len());
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::snapshot_recursive;
+
+    #[test]
+    fn snapshot_includes_nested_files() {
+        let root = std::env::temp_dir().join(format!(
+            "powerext-recursive-snapshot-{}",
+            uuid::Uuid::new_v4()
+        ));
+        let nested = root.join("a").join("b");
+        std::fs::create_dir_all(&nested).unwrap();
+
+        let file = nested.join("sample.txt");
+        std::fs::write(&file, b"nested").unwrap();
+
+        let files = snapshot_recursive(&root);
+
+        let _ = std::fs::remove_dir_all(&root);
+        assert_eq!(files.get(&file), Some(&6));
     }
 }

@@ -22,7 +22,7 @@ struct Cli {
 enum Cmd {
     /// Start the watcher (used by the system service)
     Start {
-        /// Directory to watch (default: $HOME)
+        /// Directory tree to watch recursively (default: $HOME)
         #[arg(long)]
         path: Option<PathBuf>,
     },
